@@ -5,6 +5,7 @@ class DbMongo:
     
     @staticmethod
     def getDB():
+        
         user = os.environ['USERMONGO']
         password = os.environ['PASSWORDMONGO']
         cluster = os.environ['CLUSTER']

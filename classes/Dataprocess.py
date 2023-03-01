@@ -1,5 +1,5 @@
 from classes import DbMongo
-from classes import DATA, Dataprocess
+from classes.data import DATA
 from classes import Enrollments
 class Dataprocess:
 
@@ -8,46 +8,67 @@ class Dataprocess:
 
     def create_careers(self,db):
         ## Do something to create careers on your mongodb collection using __data
-        # Se crea una lista de carreras
-        careers = list(set([d['carrera'] for d in self.__data]))
-    
-        # Se inserta cada carrera en la colección de carreras
-        for c in careers:
-             db.careers.insert_one({'name': c})
+        self.__collection = "careers"
+        collection = db[self.__collection]     
+        
+        for student in self.__data:      
+            career = student['carrera']
+            if not collection.find_one({'name':career}):
+                collection.insert_one({'name':career})
+
+       
         return True
     def create_courses(self,db):
-        # Se crea una lista de cursos
-        courses = []
-        for d in self.__data:
-            for c in d['cursos_aprobados'] + d['cursos_reprobados']:
-                courses.append(c)
-        courses = list(set(courses))
-        
-        # Se inserta cada curso en la colección de cursos
-        for c in courses:
-            db.courses.insert_one({'name': c})
         ## Do something to create courses on your mongodb collection using __data
+        self.__collection = "courses"
+        collection = db[self.__collection]   
+
+        for student in self.__data:
+            for course in student['cursos_aprobados'] + student['cursos_reprobados']:
+                if not course.find_one({'name':course}):
+                    course.insert_one({'name':course})
+
         return True
     def create_students(self,db):
         ## Do something to create students on your mongodb collection using __data
-        # Se inserta cada estudiante en la colección de estudiantes
-        for d in self.__data:
-            db.students.insert_one({
-                'name': d['nombre_completo'],
-                'age': d['edad'],
-                'career': d['carrera']
-            })
+        self.__collection = "students"
+        collection = db[self.__collection]  
+
+        for student in self.__data:
+            student_data = {
+            'number_acount':student['numero_cuenta'],
+            'name': student['nombre_completo'],
+            'age':student['edad'],
+            'career':student['carrera'],
+            'approved_courses':student['cursos_aprobados'],
+            'failed_courses':student['cursos_reprobados']
+        }
+        collection.insert_one(student_data)
         return True
+    
     def create_enrollments(self, db):
         ## Do something to create enrollments on your mongodb collection using __data
-    # Se inserta cada rejistro en la colección de inscripcion
-        for d in self.__data:
-            student_id = db.students.find_one({'name': d['nombre_completo']})['_id']
-            for course in d['cursos_aprobados']:
-                course_id = db.courses.find_one({'name': course})['_id']
-                db.enrollments.insert_one(Enrollments(student_id, course_id, True).to_dict())
-            for course in d['cursos_reprobados']:
-                course_id = db.courses.find_one({'name': course})['_id']
-                db.enrollments.insert_one(Enrollments(student_id, course_id, False).to_dict())
-    
+        self.__collection = "enrolloments"
+        collection = db[self.__collection] 
+
+        for student in self.__data:
+            student_id = collection.find_one({'name':student['nombre_completo']},{'_id':0})
+            for course in student['cursos_aprobados']:
+                course_id = collection.find_one({'name': course},{'_id':0})
+                enrollments_data = {
+                    'student_id': student_id,
+                    'course_id': course_id,
+                    'status': 'approved'
+                }
+                collection.insert_one(enrollments_data)
+
+            for course in student['cursos_reprobados']:
+                course_id = course.find_one({'name': course},{'_id':0})
+                enrolloment_data = {
+                    'student_id': student_id,
+                    'course_id': course_id,
+                    'status': 'failed'
+                }
+                collection.insert_one(enrolloment_data)
+
         return True
