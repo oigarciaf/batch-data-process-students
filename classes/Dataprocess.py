@@ -25,8 +25,8 @@ class Dataprocess:
 
         for student in self.__data:
             for course in student['cursos_aprobados'] + student['cursos_reprobados']:
-                if not course.find_one({'name':course}):
-                    course.insert_one({'name':course})
+                if not collection.courses.find_one({'name':course}):
+                    collection.courses.insert_one({'name':course})
 
         return True
     def create_students(self,db):
@@ -48,13 +48,13 @@ class Dataprocess:
     
     def create_enrollments(self, db):
         ## Do something to create enrollments on your mongodb collection using __data
-        self.__collection = "enrolloments"
+        self.__collection = "enrollments"
         collection = db[self.__collection] 
 
         for student in self.__data:
-            student_id = collection.find_one({'name':student['nombre_completo']},{'_id':0})
+            student_id = collection.students.find_one({'name':student['nombre_completo']},{'_id':0})
             for course in student['cursos_aprobados']:
-                course_id = collection.find_one({'name': course},{'_id':0})
+                course_id = collection.courses.find_one({'name': course},{'_id':0})
                 enrollments_data = {
                     'student_id': student_id,
                     'course_id': course_id,
@@ -63,12 +63,12 @@ class Dataprocess:
                 collection.insert_one(enrollments_data)
 
             for course in student['cursos_reprobados']:
-                course_id = course.find_one({'name': course},{'_id':0})
-                enrolloment_data = {
+                course_id = collection.courses.find_one({'name': course},{'_id':0})
+                enrollment_data = {
                     'student_id': student_id,
                     'course_id': course_id,
                     'status': 'failed'
                 }
-                collection.insert_one(enrolloment_data)
+                collection.insert_one(enrollment_data)
 
         return True

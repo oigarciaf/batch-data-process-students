@@ -8,11 +8,11 @@ def main():
     client, db = DbMongo.getDB()
     pipeline = Dataprocess(DATA)
 
-    #collection = db.data
-    #collection.insert_many(DATA)
+    collection = db.data
+    collection.insert_many(DATA)
     
-   # pipeline.create_careers(db)
-   # pipeline.create_students(db)
+    pipeline.create_careers(db)
+    pipeline.create_students(db)
     pipeline.create_enrollments(db)
 
     print(db.list_collection_names())
